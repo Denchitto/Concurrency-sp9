@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"slices"
 	"sync"
 	"time"
 )
@@ -132,10 +131,6 @@ func maximum(data []int) int {
 		return -1
 	case len(data) < 2:
 		return -1
-	case len(data) != cap(data):
-		return -1
-	case slices.Min(data) < 0:
-		return -1
 	}
 	max := 0
 	for _, v := range data {
@@ -169,14 +164,14 @@ func maxChunks(data []int) int {
 	for i := 0; i < CHUNKS; i++ {
 		go func(i int) {
 			defer wg.Done()
-			max := slices.Max(sliceChunks[i])
+			max := maximum(sliceChunks[i])
 			maxValues[i] = max
 		}(i)
 	}
 
 	wg.Wait()
 
-	return int(slices.Max(maxValues[0:]))
+	return maximum(maxValues)
 }
 
 func main() {

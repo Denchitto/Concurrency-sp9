@@ -39,8 +39,6 @@ func TestMaximum(t *testing.T) {
 		{1},
 		{},
 		nil,
-		make([]int, 5, 10),
-		{-1, 3, 34, -50},
 	}
 	for _, v := range notValid {
 		sl := maximum(v)
