@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"slices"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -138,7 +137,13 @@ func maximum(data []int) int {
 	case slices.Min(data) < 0:
 		return -1
 	}
-	return slices.Max(data)
+	max := 0
+	for _, v := range data {
+		if v > max {
+			max = v
+		}
+	}
+	return max
 }
 
 // maxChunks returns the maximum number of elements in a chunks.
@@ -146,7 +151,7 @@ func maxChunks(data []int) int {
 	// ваш код здесь
 	var (
 		sliceChunks = make([][]int, CHUNKS)
-		maxValues   [CHUNKS]int64
+		maxValues   = make([]int, CHUNKS)
 		chunkLen    = len(data) / CHUNKS
 		wg          sync.WaitGroup
 	)
@@ -165,8 +170,7 @@ func maxChunks(data []int) int {
 		go func(i int) {
 			defer wg.Done()
 			max := slices.Max(sliceChunks[i])
-			atomic.StoreInt64(&maxValues[i], int64(max)) //Нужен ли вообще здесь мьютекс или атомарная функция? Мы пишем ведь в уникальный индекс
-			//maxValues[i] = int64(max)
+			maxValues[i] = max
 		}(i)
 	}
 
