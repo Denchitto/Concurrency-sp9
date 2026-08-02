@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -124,25 +125,38 @@ func generateRandomElements(size int) []int {
 */ //
 
 // maximum returns the maximum number of elements.
-func maximum(data []int) int {
+func maximum(data []int) (int, error) {
 	// ваш код здесь
 	switch {
 	case data == nil:
-		return -1
+		return 0, errors.New("slice is nil")
 	case len(data) < 2:
-		return -1
+		return 0, errors.New("slice length is less than 2")
 	}
-	max := 0
+
+	max := data[0]
 	for _, v := range data {
 		if v > max {
 			max = v
 		}
 	}
-	return max
+
+	/*Код для прошлого коммита если отрицательные числа все таки не подходят
+	max := 0
+	for _, v := range data {
+		switch {
+			case v < 0:
+				return -1
+			case v > max:
+				max = v
+		}
+	}
+	*/
+	return max, nil
 }
 
 // maxChunks returns the maximum number of elements in a chunks.
-func maxChunks(data []int) int {
+func maxChunks(data []int) (int, error) {
 	// ваш код здесь
 	var (
 		sliceChunks = make([][]int, CHUNKS)
@@ -160,18 +174,34 @@ func maxChunks(data []int) int {
 	}
 
 	wg.Add(CHUNKS)
+	ch := make(chan error, CHUNKS)
 
 	for i := 0; i < CHUNKS; i++ {
 		go func(i int) {
 			defer wg.Done()
-			max := maximum(sliceChunks[i])
+			max, err := maximum(sliceChunks[i])
+			if err != nil {
+				ch <- err
+				return
+			}
+			ch <- nil
 			maxValues[i] = max
 		}(i)
 	}
 
 	wg.Wait()
+	close(ch)
+	for err := range ch {
+		if err != nil {
+			return 0, err
+		}
+	}
 
-	return maximum(maxValues)
+	max, err := maximum(maxValues)
+	if err != nil {
+		return 0, err
+	}
+	return max, nil
 }
 
 func main() {
@@ -186,11 +216,11 @@ func main() {
 	fmt.Println("Ищем максимальное значение в один поток")
 	// ваш код здесь
 	start := time.Now()
-	max := maximum(sliceInt)
+	max, err := maximum(sliceInt)
 	finish := time.Since(start)
 	elapsed := int(finish.Microseconds())
-	if max == -1 {
-		log.Println("incorrect slice")
+	if err != nil {
+		log.Println(err)
 		return
 	}
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d µs\n", max, elapsed)
@@ -198,8 +228,12 @@ func main() {
 	fmt.Printf("Ищем максимальное значение в %d потоков\n", CHUNKS)
 	// ваш код здесь
 	start = time.Now()
-	max = maxChunks(sliceInt)
+	max, err = maxChunks(sliceInt)
 	finish = time.Since(start)
 	elapsed = int(finish.Microseconds())
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d µs\n", max, elapsed)
 }

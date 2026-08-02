@@ -26,22 +26,27 @@ func TestGenerateRandomElements(t *testing.T) {
 func TestMaximum(t *testing.T) {
 	valid := [][]int{
 		{1, 3, 4, 2, 12},
-		{0, 1, 30, 100},
-		{1000, 200, 300, 1000000},
+		{-90, 1, 30, 0, -20, 100},
+		{1000, 200, -300, 1000000},
 		{0, 0, 0, 0},
+		{-1, -3, -6, -100},
 	}
 	for _, v := range valid {
-		sl := maximum(v)
-		assert.NotEqual(t, -1, sl)
+		sl, err := maximum(v)
+		assert.NoError(t, err)
 		assert.Equal(t, slices.Max(v), sl)
 	}
 	notValid := [][]int{
 		{1},
 		{},
 		nil,
+		//Для прошлого коммита, если отрицательные числа все таки не подходят
+		//{-1, 3, 34, -50},
+		//{-2, -100, -1000, -999},
 	}
 	for _, v := range notValid {
-		sl := maximum(v)
-		assert.Equal(t, -1, sl)
+		sl, err := maximum(v)
+		assert.Error(t, err)
+		assert.Equal(t, 0, sl)
 	}
 }
